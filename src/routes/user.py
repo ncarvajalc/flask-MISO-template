@@ -3,49 +3,23 @@ from flask_restful import Resource
 from models.user import User
 from database.db import db_session
 from schemas.user import user_schema, users_schema
+from logic.user import get_users, get_user_by_id, create_user, update_user, delete_user
 
 
 class UserListResource(Resource):
     def get(self):
-        users = db_session.query(User).all()
-        return users_schema.dump(users)
+        return get_users()
 
     def post(self):
-        new_user = User(name=request.json["name"], email=request.json["email"])
-        db_session.add(new_user)
-        db_session.commit()
-        return user_schema.dump(new_user), 201
+        return create_user(request.json["name"], request.json["email"])
 
 
 class UserResource(Resource):
     def get(self, user_id):
-        user = db_session.query(User).filter(User.id == user_id).first()
-
-        if user is None:
-            return {"message": "User not found"}, 404
-
-        return user_schema.dump(user)
+        return get_user_by_id(user_id)
 
     def put(self, user_id):
-        user = db_session.query(User).filter(User.id == user_id).first()
-
-        if user is None:
-            return {"message": "User not found"}, 404
-
-        if "name" in request.json:
-            user.name = request.json["name"]
-        if "email" in request.json:
-            user.email = request.json["email"]
-
-        db_session.commit()
-        return user_schema.dump(user)
+        return update_user(user_id, request.json["name"], request.json["email"])
 
     def delete(self, user_id):
-        user = db_session.query(User).filter(User.id == user_id).first()
-
-        if user is None:
-            return {"message": "User not found"}, 404
-
-        db_session.delete(user)
-        db_session.commit()
-        return "", 204
+        return delete_user(user_id)
